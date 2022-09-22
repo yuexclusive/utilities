@@ -1,0 +1,39 @@
+[package]
+edition = "2021"
+name = "utilities"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# fluvio = "0.13.1"
+# serde_json = "1.0.81"
+[dependencies]
+async_once = "*"
+lazy_static = {version = "1.4.0", optional = true}
+
+chrono = {version = "0.4.19", optional = true}
+serde = {version = "1", features = ["derive"], optional = true}
+serde_json = {version = "1", optional = true}
+
+log = {version = "0.4.17", optional = true}
+sqlx = {version = "0.6", features = ["runtime-tokio-native-tls", "postgres"], optional = true}
+# futures-lite = "1.11.3"
+# bincode = "*"
+# clap = {version = "3.2.20", features = ["derive"]}
+actix-web = {version = "4", optional = true}
+jsonwebtoken = "*"
+lettre = {version = "0.10", features = ["tokio1-native-tls"], optional = true}
+meilisearch-sdk = {version = "0.17.0", optional = true}
+redis = {version = "0.21.5", features = ["tokio-comp"], optional = true}
+redis_encoding_derive = {path = "./redis_encoding_derive"}
+regex = {version = "1.5.6", optional = true}
+
+[features]
+actix-web = ["dep:actix-web", "json", "response"]
+datetime = ["dep:chrono"]
+email = ["dep:lettre", "dep:log"]
+json = ["dep:serde", "dep:serde_json"]
+meilisearch = ["dep:meilisearch-sdk", "dep:log", "dep:lazy_static"]
+pg = ["dep:sqlx", "dep:lazy_static"]
+redis = ["dep:redis", "dep:log", "dep:lazy_static"]
+regex = ["dep:regex"]
+response = ["dep:serde"]
