@@ -1,5 +1,5 @@
 #![cfg(feature = "redis")]
-
+use futures::StreamExt;
 use lazy_static::lazy_static;
 use redis::{aio::Connection, AsyncCommands, FromRedisValue, ToRedisArgs};
 use serde::ser::Serialize;
@@ -54,6 +54,29 @@ pub async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
     let client = redis::Client::open(get_config())?;
     let res = client.get_async_connection().await?.into_pubsub();
     Ok(res)
+}
+
+pub async fn subscribe<T>(channel_name: &str, f: impl Fn(T) + 'static) -> redis::RedisResult<()>
+where
+    T: redis::FromRedisValue,
+{
+    let mut pubsub = pubsub().await?;
+    pubsub.subscribe(channel_name).await?;
+    let mut stream = pubsub.into_on_message();
+    actix_web::rt::spawn(async move {
+        while let Some(msg) = stream.next().await {
+            match msg.get_payload::<T>() {
+                Ok(msg) => {
+                    f(msg);
+                }
+                Err(err) => {
+                    log::error!("get message error: {:#?}", err)
+                }
+            }
+        }
+    });
+    log::info!("subscribe on channel {}", channel_name);
+    Ok(())
 }
 
 pub async fn set<'a, K, V>(k: K, v: V) -> redis::RedisResult<()>
