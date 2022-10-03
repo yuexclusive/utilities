@@ -50,7 +50,7 @@ pub async fn conn() -> redis::RedisResult<Connection> {
     client.get_async_connection().await
 }
 
-pub async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
+async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
     let client = redis::Client::open(get_config())?;
     let res = client.get_async_connection().await?.into_pubsub();
     Ok(res)
