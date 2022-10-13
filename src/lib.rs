@@ -6,3 +6,4 @@ pub mod meilisearch;
 pub mod pg;
 pub mod redis;
 pub mod response;
+pub mod from_primitive;

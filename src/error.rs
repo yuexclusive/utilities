@@ -51,6 +51,7 @@ impl From<redis::RedisError> for ErrorKind {
 //     }
 // }
 
+#[cfg(feature = "actix-web")]
 impl From<jsonwebtoken::errors::Error> for ErrorKind {
     fn from(err: jsonwebtoken::errors::Error) -> Self {
         ErrorKind::OtherError(Box::new(err))
