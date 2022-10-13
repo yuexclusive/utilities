@@ -125,6 +125,6 @@ where
     conn().await?.exists::<_, bool>(k).await
 }
 
-pub mod macros {
+pub mod derive {
     pub use redis_encoding_derive::{FromRedisValue, ToRedisArgs};
 }
