@@ -4,6 +4,10 @@ use lazy_static::lazy_static;
 use redis::{aio::Connection, AsyncCommands, FromRedisValue, ToRedisArgs};
 use serde::ser::Serialize;
 use std::sync::Mutex;
+pub mod derive {
+    pub use redis_encoding_derive::{FromRedisValue, ToRedisArgs};
+}
+
 
 lazy_static! {
     static ref CONFIG: Mutex<Option<Config>> = Default::default();
@@ -125,6 +129,3 @@ where
     conn().await?.exists::<_, bool>(k).await
 }
 
-pub mod derive {
-    pub use redis_encoding_derive::{FromRedisValue, ToRedisArgs};
-}
