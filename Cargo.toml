@@ -35,6 +35,7 @@ num-traits = {version = "*", optional = true}
 [features]
 actix-web = ["dep:actix-web", "json", "response", "jsonwebtoken"]
 datetime = ["dep:chrono"]
+# default = ["from_primitive"]
 email = ["dep:lettre", "dep:log"]
 from_primitive = ["dep:num", "dep:num-derive", "dep:num-traits"]
 json = ["dep:serde", "dep:serde_json"]
