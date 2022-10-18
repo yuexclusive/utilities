@@ -34,9 +34,7 @@ num-derive = {version = "*", optional = true}
 [features]
 actix-web = ["dep:actix-web", "json", "response", "jsonwebtoken"]
 datetime = ["dep:chrono"]
-# default = ["from_primitive"]
 email = ["dep:lettre", "dep:log"]
-# "dep:num-traits"
 from_primitive = ["dep:num", "dep:num-derive"]
 json = ["dep:serde", "dep:serde_json"]
 meilisearch = ["dep:meilisearch-sdk", "dep:log", "dep:lazy_static"]
@@ -44,3 +42,8 @@ pg = ["dep:sqlx", "dep:lazy_static"]
 redis = ["dep:redis", "dep:log", "dep:lazy_static", "futures", "json", "actix-web"]
 regex = ["dep:regex"]
 response = ["dep:serde"]
+default = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response"]
+
+
+
+

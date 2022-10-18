@@ -34,7 +34,10 @@ impl std::error::Error for ErrorKind {}
 #[cfg(feature = "pg")]
 impl From<sqlx::Error> for ErrorKind {
     fn from(err: sqlx::Error) -> Self {
-        ErrorKind::OtherError(Box::new(err))
+        match err {
+            sqlx::Error::RowNotFound => "can not find data in db".to_validation_error(),
+            err => ErrorKind::OtherError(Box::new(err)),
+        }
     }
 }
 
