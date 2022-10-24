@@ -1,8 +1,9 @@
 #![cfg(feature = "meilisearch")]
 
 use lazy_static::lazy_static;
-use std::sync::Mutex;
 pub use meilisearch_sdk;
+use meilisearch_sdk::client::Client;
+use std::sync::Mutex;
 
 #[derive(Clone)]
 struct Config {
