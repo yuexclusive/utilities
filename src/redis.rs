@@ -1,9 +1,8 @@
 #![cfg(feature = "redis")]
-use futures::StreamExt;
 use lazy_static::lazy_static;
-use redis::{aio::Connection, AsyncCommands, FromRedisValue, ToRedisArgs};
+use redis::{aio::Connection, AsyncCommands, Commands, FromRedisValue, ToRedisArgs};
 use serde::ser::Serialize;
-use std::sync::{mpsc::Receiver, Arc, Mutex};
+use std::sync::Mutex;
 pub mod derive {
     pub use redis_encoding_derive::{FromRedisValue, ToRedisArgs};
 }
@@ -53,16 +52,20 @@ pub async fn conn() -> redis::RedisResult<Connection> {
     client.get_async_connection().await
 }
 
+pub fn conn_sync() -> redis::RedisResult<redis::Connection> {
+    let client = redis::Client::open(get_config())?;
+    client.get_connection()
+}
+
 async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
     let client = redis::Client::open(get_config())?;
     let res = client.get_async_connection().await?.into_pubsub();
     Ok(res)
 }
 
-pub async fn subscribe(
+pub async fn subscribe<T>(
     channel_name: &str,
-) -> redis::RedisResult<impl futures::Stream<Item = redis::Msg>>
-{
+) -> redis::RedisResult<impl futures::Stream<Item = redis::Msg>> {
     let mut pubsub = pubsub().await?;
     pubsub.subscribe(channel_name).await?;
     let stream = pubsub.into_on_message();
@@ -83,6 +86,14 @@ where
     V: Serialize + ToRedisArgs + Send + Sync + 'a,
 {
     conn().await?.publish(channel, v).await
+}
+
+pub fn publish_sync<'a, K, V>(channel: K, v: V) -> redis::RedisResult<()>
+where
+    K: ToRedisArgs + Send + Sync + 'a,
+    V: Serialize + ToRedisArgs + Send + Sync + 'a,
+{
+    conn_sync()?.publish(channel, v)
 }
 
 pub async fn set_ex<'a, K, V>(k: K, v: V, seconds: usize) -> redis::RedisResult<()>
