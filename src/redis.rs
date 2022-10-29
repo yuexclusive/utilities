@@ -61,7 +61,6 @@ async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
 
 pub async fn subscribe<T>(
     channel_name: &str,
-    // receiver: Arc<Mutex<Receiver>>,
 ) -> redis::RedisResult<impl futures::Stream<Item = redis::Msg>>
 where
     T: redis::FromRedisValue,
