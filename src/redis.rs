@@ -3,11 +3,10 @@ use futures::StreamExt;
 use lazy_static::lazy_static;
 use redis::{aio::Connection, AsyncCommands, FromRedisValue, ToRedisArgs};
 use serde::ser::Serialize;
-use std::sync::Mutex;
+use std::sync::{mpsc::Receiver, Arc, Mutex};
 pub mod derive {
     pub use redis_encoding_derive::{FromRedisValue, ToRedisArgs};
 }
-
 
 lazy_static! {
     static ref CONFIG: Mutex<Option<Config>> = Default::default();
@@ -60,27 +59,17 @@ async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
     Ok(res)
 }
 
-pub async fn subscribe<T>(channel_name: &str, f: impl Fn(T) + 'static) -> redis::RedisResult<()>
+pub async fn subscribe<T>(
+    channel_name: &str,
+    // receiver: Arc<Mutex<Receiver>>,
+) -> redis::RedisResult<impl futures::Stream<Item = redis::Msg>>
 where
     T: redis::FromRedisValue,
 {
     let mut pubsub = pubsub().await?;
     pubsub.subscribe(channel_name).await?;
-    let mut stream = pubsub.into_on_message();
-    actix_web::rt::spawn(async move {
-        while let Some(msg) = stream.next().await {
-            match msg.get_payload::<T>() {
-                Ok(msg) => {
-                    f(msg);
-                }
-                Err(err) => {
-                    log::error!("get message error: {:#?}", err)
-                }
-            }
-        }
-    });
-    log::info!("subscribe on channel {}", channel_name);
-    Ok(())
+    let stream = pubsub.into_on_message();
+    Ok(stream)
 }
 
 pub async fn set<'a, K, V>(k: K, v: V) -> redis::RedisResult<()>
@@ -128,4 +117,3 @@ where
 {
     conn().await?.exists::<_, bool>(k).await
 }
-
