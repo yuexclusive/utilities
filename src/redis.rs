@@ -59,11 +59,9 @@ async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
     Ok(res)
 }
 
-pub async fn subscribe<T>(
+pub async fn subscribe(
     channel_name: &str,
 ) -> redis::RedisResult<impl futures::Stream<Item = redis::Msg>>
-where
-    T: redis::FromRedisValue,
 {
     let mut pubsub = pubsub().await?;
     pubsub.subscribe(channel_name).await?;
