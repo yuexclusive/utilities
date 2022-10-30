@@ -52,11 +52,6 @@ pub async fn conn() -> redis::RedisResult<Connection> {
     client.get_async_connection().await
 }
 
-pub fn conn_sync() -> redis::RedisResult<redis::Connection> {
-    let client = redis::Client::open(get_config())?;
-    client.get_connection()
-}
-
 async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
     let client = redis::Client::open(get_config())?;
     let res = client.get_async_connection().await?.into_pubsub();
@@ -88,14 +83,6 @@ where
     conn().await?.publish(channel, v).await
 }
 
-pub fn publish_sync<'a, K, V>(channel: K, v: V) -> redis::RedisResult<()>
-where
-    K: ToRedisArgs + Send + Sync + 'a,
-    V: Serialize + ToRedisArgs + Send + Sync + 'a,
-{
-    conn_sync()?.publish(channel, v)
-}
-
 pub async fn set_ex<'a, K, V>(k: K, v: V, seconds: usize) -> redis::RedisResult<()>
 where
     K: ToRedisArgs + Send + Sync + 'a,
@@ -124,4 +111,66 @@ where
     K: redis::ToRedisArgs + Send + Sync + 'a,
 {
     conn().await?.exists::<_, bool>(k).await
+}
+
+pub mod sync {
+    use super::*;
+    fn conn_sync() -> redis::RedisResult<redis::Connection> {
+        let client = redis::Client::open(get_config())?;
+        client.get_connection()
+    }
+
+    pub fn publish<'a, K, V>(channel: K, v: V) -> redis::RedisResult<()>
+    where
+        K: ToRedisArgs + Send + Sync + 'a,
+        V: Serialize + ToRedisArgs + Send + Sync + 'a,
+    {
+        conn_sync()?.publish(channel, v)
+    }
+
+    pub fn set<'a, K, V>(k: K, v: V) -> redis::RedisResult<()>
+    where
+        K: ToRedisArgs + Send + Sync + 'a,
+        V: Serialize + ToRedisArgs + Send + Sync + 'a,
+    {
+        conn_sync()?.set(k, v)
+    }
+
+    pub async fn get<'a, K, V>(k: K) -> Result<V, redis::RedisError>
+    where
+        K: redis::ToRedisArgs + Send + Sync + 'a,
+        V: FromRedisValue,
+    {
+        conn_sync()?.get::<_, V>(k)
+    }
+
+    pub fn set_ex<'a, K, V>(k: K, v: V, seconds: usize) -> redis::RedisResult<()>
+    where
+        K: ToRedisArgs + Send + Sync + 'a,
+        V: Serialize + ToRedisArgs + Send + Sync + 'a,
+    {
+        conn_sync()?.set_ex(k, v, seconds)
+    }
+
+    pub fn ttl<'a, K>(k: K) -> Result<u32, redis::RedisError>
+    where
+        K: redis::ToRedisArgs + Send + Sync + 'a,
+    {
+        conn_sync()?.ttl::<_, u32>(k)
+    }
+
+    pub fn exists<'a, K>(k: K) -> Result<bool, redis::RedisError>
+    where
+        K: redis::ToRedisArgs + Send + Sync + 'a,
+    {
+        conn_sync()?.exists::<_, bool>(k)
+    }
+
+    pub fn subscribe(channel_name: &str) -> redis::RedisResult<redis::Msg> {
+        let mut conn = conn_sync()?;
+        let mut pubsub = conn.as_pubsub();
+        pubsub.subscribe(channel_name)?;
+        let stream = pubsub.get_message()?;
+        Ok(stream)
+    }
 }
