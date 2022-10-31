@@ -83,6 +83,14 @@ where
     conn().await?.publish(channel, v).await
 }
 
+pub async fn set_nx<'a, K, V>(k: K, v: V) -> redis::RedisResult<()>
+where
+    K: ToRedisArgs + Send + Sync + 'a,
+    V: Serialize + ToRedisArgs + Send + Sync + 'a,
+{
+    conn().await?.set_nx(k, v).await
+}
+
 pub async fn set_ex<'a, K, V>(k: K, v: V, seconds: usize) -> redis::RedisResult<()>
 where
     K: ToRedisArgs + Send + Sync + 'a,
