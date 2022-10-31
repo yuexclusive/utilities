@@ -75,6 +75,13 @@ where
     conn().await?.set(k, v).await
 }
 
+pub async fn del<'a, K>(k: K) -> redis::RedisResult<()>
+where
+    K: ToRedisArgs + Send + Sync + 'a,
+{
+    conn().await?.del(k).await
+}
+
 pub async fn publish<'a, K, V>(channel: K, v: V) -> redis::RedisResult<()>
 where
     K: ToRedisArgs + Send + Sync + 'a,
@@ -150,6 +157,13 @@ pub mod sync {
         V: FromRedisValue,
     {
         conn_sync()?.get::<_, V>(k)
+    }
+
+    pub fn del<'a, K>(k: K) -> redis::RedisResult<()>
+    where
+        K: ToRedisArgs + Send + Sync + 'a,
+    {
+        conn_sync()?.del(k)
     }
 
     pub fn set_ex<'a, K, V>(k: K, v: V, seconds: usize) -> redis::RedisResult<()>
