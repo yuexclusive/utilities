@@ -42,7 +42,7 @@ pg = ["dep:sqlx", "dep:lazy_static"]
 redis = ["dep:redis", "dep:log", "dep:lazy_static", "futures", "json", "actix-web"]
 regex = ["dep:regex"]
 response = ["dep:serde"]
-# default = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response"]
+default = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response"]
 
 
 

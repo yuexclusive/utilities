@@ -173,4 +173,20 @@ pub mod sync {
         let stream = pubsub.get_message()?;
         Ok(stream)
     }
+
+    pub fn lock<'a, K, F>(k: K, mut f: F) -> redis::RedisResult<()>
+    where
+        K: ToRedisArgs + Send + Sync + Clone + 'a,
+        F: FnMut(),
+    {
+        if conn_sync()?.set_nx::<K, bool, ()>(k.clone(), true).is_ok() {
+            conn_sync()?.expire(k.clone(), 10)?;
+            f();
+            conn_sync()?.del(k.clone())?;
+        } else {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            lock(k.clone(), f)?;
+        }
+        Ok(())
+    }
 }
