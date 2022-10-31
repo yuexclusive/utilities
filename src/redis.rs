@@ -136,7 +136,7 @@ pub mod sync {
         conn_sync()?.set(k, v)
     }
 
-    pub async fn get<'a, K, V>(k: K) -> Result<V, redis::RedisError>
+    pub fn get<'a, K, V>(k: K) -> Result<V, redis::RedisError>
     where
         K: redis::ToRedisArgs + Send + Sync + 'a,
         V: FromRedisValue,
