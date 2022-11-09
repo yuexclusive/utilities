@@ -1,5 +1,6 @@
 #![cfg(feature = "redis")]
 use lazy_static::lazy_static;
+pub use redis;
 use redis::{aio::Connection, AsyncCommands, Commands, FromRedisValue, ToRedisArgs};
 use serde::ser::Serialize;
 use std::sync::Mutex;
@@ -9,6 +10,10 @@ pub mod derive {
 
 lazy_static! {
     static ref CONFIG: Mutex<Option<Config>> = Default::default();
+}
+
+fn get_config() -> Config {
+    CONFIG.lock().unwrap().clone().expect("please init redis")
 }
 
 #[derive(Clone, Default)]
@@ -41,10 +46,6 @@ pub fn init(host: impl AsRef<str>, port: u16, username: Option<String>, password
     });
 
     log::info!("email init success")
-}
-
-fn get_config() -> Config {
-    CONFIG.lock().unwrap().clone().expect("please init redis")
 }
 
 pub async fn conn() -> redis::RedisResult<Connection> {
@@ -130,7 +131,7 @@ where
 
 pub mod sync {
     use super::*;
-    fn conn_sync() -> redis::RedisResult<redis::Connection> {
+    pub fn conn_sync() -> redis::RedisResult<redis::Connection> {
         let client = redis::Client::open(get_config())?;
         client.get_connection()
     }
