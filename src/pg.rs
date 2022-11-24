@@ -3,6 +3,7 @@
 use async_once::AsyncOnce;
 use lazy_static::lazy_static;
 use sqlx::{Pool, Postgres, Transaction};
+use std::fmt;
 use std::sync::Mutex;
 use std::{env, result::Result};
 
@@ -38,15 +39,15 @@ pub fn init(user: &str, pwd: &str, host: &str, port: u16, db: &str) {
 
     let url = CONFIG.lock().unwrap().clone();
 
-    env::set_var("DATABADE_URL", url.unwrap().to_url())
+    env::set_var("DATABADE_URL", url.unwrap().to_string())
 }
 
-impl Config {
-    fn to_url(&self) -> String {
-        format!(
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!(
             "postgres://{}:{}@{}:{}/{}",
-            self.user, self.pwd, self.host, self.port, self.db
-        )
+            self.user, self.pwd, self.host, self.port, self.db,
+        ))
     }
 }
 
