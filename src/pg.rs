@@ -13,11 +13,15 @@ pub async fn tran<'a>() -> SqlResult<Transaction<'a, Postgres>> {
     CONN.get().await.begin().await
 }
 
+pub fn init() {
+    dotenv::dotenv().unwrap();
+}
+
 lazy_static! {
     pub static ref CONN: AsyncOnce<Pool<Postgres>> = AsyncOnce::new(async {
         sqlx::postgres::PgPoolOptions::new()
             .test_before_acquire(false)
-            .connect(std::env!("DATABASE_URL").unwrap())
+            .connect(&std::env::var("DATABASE_URL").unwrap())
             .await
             .unwrap()
     });
