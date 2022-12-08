@@ -17,7 +17,7 @@ lazy_static! {
     pub static ref CONN: AsyncOnce<Pool<Postgres>> = AsyncOnce::new(async {
         sqlx::postgres::PgPoolOptions::new()
             .test_before_acquire(false)
-            .connect(&env::var("DATABADE_URL").unwrap())
+            .connect(&env::var("DATABASE_URL").unwrap())
             .await
             .unwrap()
     });
