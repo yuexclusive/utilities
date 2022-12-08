@@ -33,8 +33,9 @@ num-derive = {version = "0", optional = true}
 
 [features]
 actix-web = ["dep:actix-web", "json", "response", "jsonwebtoken"]
+all = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response"]
 datetime = ["dep:chrono"]
-# default = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response"]
+# default = ["all"]
 email = ["dep:lettre", "dep:log"]
 from_primitive = ["dep:num", "dep:num-derive"]
 json = ["dep:serde", "dep:serde_json"]

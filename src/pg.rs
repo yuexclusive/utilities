@@ -4,6 +4,8 @@ use async_once::AsyncOnce;
 use lazy_static::lazy_static;
 use sqlx::{Pool, Postgres, Transaction};
 use std::fmt;
+use std::fs::{self, File};
+use std::io::Write;
 use std::sync::Mutex;
 use std::{env, result::Result};
 
@@ -39,7 +41,12 @@ pub fn init(user: &str, pwd: &str, host: &str, port: u16, db: &str) {
 
     let url = CONFIG.lock().unwrap().clone();
 
-    env::set_var("DATABADE_URL", url.unwrap().to_string())
+    if let Ok(_) = fs::try_exists("./.env") {
+        let mut file = File::create_new(".env").unwrap();
+        let bs = format!("DATABADE_URL=\"{}\"", url.unwrap().to_string()).as_bytes();
+        file.write(bs).unwrap();
+        file.flush().unwrap();
+    }
 }
 
 impl fmt::Display for Config {
