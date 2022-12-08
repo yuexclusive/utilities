@@ -45,7 +45,7 @@ pub fn init(host: impl AsRef<str>, port: u16, username: Option<String>, password
         password: password,
     });
 
-    log::info!("email init success")
+    log::info!("redis init success")
 }
 
 pub async fn conn() -> redis::RedisResult<Connection> {
