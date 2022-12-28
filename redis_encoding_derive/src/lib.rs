@@ -44,15 +44,18 @@ fn impl_from_redis_value(ast: &syn::DeriveInput) -> TokenStream {
     let gen = quote! {
         impl redis::FromRedisValue for #name {
             fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {
-                // match Nil
-                if let redis::Value::Data(bs) = v {
-                    let res = serde_json::from_slice::<Self>(bs).unwrap();
-                    return Ok(res);
+                match v {
+                    redis::Value::Data(bs)=>{
+                        let res = serde_json::from_slice::<Self>(bs).unwrap();
+                        return Ok(res);
+                    }
+                    redis::Value::Nil=>{
+                        return Err((redis::ErrorKind::ResponseError,"can not find key").into())
+                    }
+                    _=>{
+                        panic!("redis value is not vec<u8>")
+                    }
                 }
-                if let redis::Value::Nil = v {
-                    return Err((redis::ErrorKind::ResponseError,"can not find key").into())
-                }
-                panic!("redis value is not vec<u8>")
             }
         }
     };
