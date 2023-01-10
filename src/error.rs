@@ -104,7 +104,6 @@ impl actix_web::error::ResponseError for ErrorKind {
     }
 
     fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
-        log::error!("{}", self);
         HttpResponse::build(self.status_code())
             .insert_header(ContentType::html())
             .insert_header(("access-control-allow-origin", "*"))
