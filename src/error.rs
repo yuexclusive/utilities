@@ -118,7 +118,7 @@ impl actix_web::error::ResponseError for ErrorKind {
 macro_rules! business_error {
     ($error_msg: expr) => {{
         log::error!("business error: {}", $error_msg);
-        utilities::error::ErrorKind::BusinessError($error_msg.to_string())
+        Err(utilities::error::ErrorKind::BusinessError($error_msg.to_string()))
     }};
 }
 
@@ -126,7 +126,7 @@ macro_rules! business_error {
 macro_rules! validation_error {
     ($error_msg: expr) => {{
         log::error!("validation error: {}", $error_msg);
-        utilities::error::ErrorKind::ValidationError($error_msg.to_string())
+        Err(utilities::error::ErrorKind::ValidationError($error_msg.to_string()))
     }};
 }
 
@@ -134,7 +134,7 @@ macro_rules! validation_error {
 macro_rules! hint_error {
     ($error_msg: expr) => {{
         log::error!("hint error: {}", $error_msg);
-        utilities::error::ErrorKind::Hint($error_msg.to_string())
+        Err(utilities::error::ErrorKind::Hint($error_msg.to_string()))
     }};
 }
 
@@ -142,6 +142,6 @@ macro_rules! hint_error {
 macro_rules! unauthorized_error {
     ($error_msg: expr) => {{
         log::error!("unauthorized error: {}", $error_msg);
-        utilities::error::ErrorKind::Unauthorized($error_msg.to_string())
+        Err(utilities::error::ErrorKind::Unauthorized($error_msg.to_string()))
     }};
 }
