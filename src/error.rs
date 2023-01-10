@@ -117,30 +117,34 @@ impl actix_web::error::ResponseError for ErrorKind {
     }
 }
 
-pub trait ToError {
-    fn to_business_error(&self) -> ErrorKind;
-    fn to_validation_error(&self) -> ErrorKind;
-    fn to_hint(&self) -> ErrorKind;
-    fn to_unauthorized(&self) -> ErrorKind;
+#[macro_export]
+macro_rules! business_error {
+    ($error_msg: expr) => {{
+        log::error!("business error: {}", $error_msg);
+        utilities::error::ErrorKind::BusinessError($error_msg.to_string())
+    }};
 }
 
-impl<T> ToError for T
-where
-    T: AsRef<str>,
-{
-    fn to_business_error(&self) -> ErrorKind {
-        ErrorKind::BusinessError(self.as_ref().to_string())
-    }
+#[macro_export]
+macro_rules! validation_error {
+    ($error_msg: expr) => {{
+        log::error!("validation error: {}", $error_msg);
+        utilities::error::ErrorKind::ValidationError($error_msg.to_string())
+    }};
+}
 
-    fn to_validation_error(&self) -> ErrorKind {
-        ErrorKind::ValidationError(self.as_ref().to_string())
-    }
+#[macro_export]
+macro_rules! hint_error {
+    ($error_msg: expr) => {{
+        log::error!("hint error: {}", $error_msg);
+        utilities::error::ErrorKind::Hint($error_msg.to_string())
+    }};
+}
 
-    fn to_hint(&self) -> ErrorKind {
-        ErrorKind::Hint(self.as_ref().to_string())
-    }
-
-    fn to_unauthorized(&self) -> ErrorKind {
-        ErrorKind::Unauthorized(self.as_ref().to_string())
-    }
+#[macro_export]
+macro_rules! unauthorized_error {
+    ($error_msg: expr) => {{
+        log::error!("unauthorized error: {}", $error_msg);
+        utilities::error::ErrorKind::Unauthorized($error_msg.to_string())
+    }};
 }
