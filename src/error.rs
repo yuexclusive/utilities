@@ -85,6 +85,12 @@ impl From<lettre::transport::smtp::Error> for ErrorKind {
     }
 }
 
+impl<T> From<ErrorKind> for Result<T, ErrorKind> {
+    fn from(value: ErrorKind) -> Self {
+        Err(value)
+    }
+}
+
 #[cfg(feature = "actix-web")]
 use actix_web::{http::header::ContentType, HttpResponse};
 #[cfg(feature = "actix-web")]
