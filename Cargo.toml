@@ -22,7 +22,7 @@ actix-web = {version = "4", optional = true}
 futures = {version = "0", optional = true}
 jsonwebtoken = {version = "8", optional = true}
 lettre = {version = "0", features = ["tokio1-native-tls"], optional = true}
-meilisearch-sdk = {version = "0", optional = true}
+meilisearch-sdk = {version = "0.22", optional = true}
 redis = {version = "0", features = ["tokio-comp"], optional = true}
 redis_encoding_derive = {path = "./redis_encoding_derive"}
 regex = {version = "1", optional = true}
@@ -30,17 +30,20 @@ regex = {version = "1", optional = true}
 dotenv = "0"
 num = {version = "0", optional = true}
 num-derive = {version = "0", optional = true}
+utoipa = {version = "2", features = ["actix_extras"], optional = true}
+utoipa-swagger-ui = {version = "2", features = ["actix-web"], optional = true}
 
 [features]
 actix-web = ["dep:actix-web", "json", "response", "jsonwebtoken"]
-all = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response"]
+all = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response", "openapi"]
 datetime = ["dep:chrono"]
-# default = ["all"]
+default = ["all"]
 email = ["dep:lettre"]
 from_primitive = ["dep:num", "dep:num-derive"]
 json = ["dep:serde", "dep:serde_json"]
 meilisearch = ["dep:meilisearch-sdk", "dep:lazy_static"]
+openapi = ["dep:utoipa", "dep:utoipa-swagger-ui"]
 pg = ["dep:sqlx", "dep:lazy_static"]
 redis = ["dep:redis", "dep:lazy_static", "futures", "json", "actix-web"]
 regex = ["dep:regex"]
-response = ["dep:serde"]
+response = ["dep:serde", "actix-web"]

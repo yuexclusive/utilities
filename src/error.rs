@@ -1,4 +1,4 @@
-#[cfg(feature = "response")]
+#![cfg(feature = "response")]
 use crate::response;
 use std::error;
 use std::fmt::Display;
@@ -116,7 +116,7 @@ impl actix_web::error::ResponseError for ErrorKind {
                 "PATCH, POST, CONNECT, GET, TRACE, PUT, OPTIONS, DELETE, HEAD",
             ))
             .insert_header(("access-control-max-age", "3600"))
-            .body(serde_json::to_string(&response::msg(&self.to_string())).unwrap())
+            .body(serde_json::to_string(&response::MsgResponse::new(&format!("{}", self))).unwrap())
     }
 }
 
