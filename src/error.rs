@@ -58,6 +58,24 @@ impl From<jsonwebtoken::errors::Error> for ErrorKind {
     }
 }
 
+#[cfg(feature = "actix-web")]
+impl<T> From<tokio::sync::mpsc::error::SendError<T>> for ErrorKind
+where
+    T: std::fmt::Debug + 'static,
+{
+    fn from(err: tokio::sync::mpsc::error::SendError<T>) -> Self {
+        ErrorKind::OtherError(Box::new(err))
+    }
+}
+
+#[cfg(feature = "actix-web")]
+impl From<tokio::sync::oneshot::error::RecvError> for ErrorKind
+{
+    fn from(err: tokio::sync::oneshot::error::RecvError) -> Self {
+        ErrorKind::OtherError(Box::new(err))
+    }
+}
+
 impl From<std::time::SystemTimeError> for ErrorKind {
     fn from(err: std::time::SystemTimeError) -> Self {
         ErrorKind::OtherError(Box::new(err))
