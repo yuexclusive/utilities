@@ -19,7 +19,7 @@ where
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 pub struct ErrorResponse<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    err_code: Option<u32>,
+    err_code: Option<usize>,
     msg: &'a str,
 }
 
@@ -49,7 +49,7 @@ impl<'a> MsgResponse<'a> {
 }
 
 impl<'a> ErrorResponse<'a> {
-    pub fn new<'b: 'a>(msg: &'b str, err_code: Option<u32>) -> Self {
+    pub fn new<'b: 'a>(msg: &'b str, err_code: Option<usize>) -> Self {
         Self { msg, err_code }
     }
 }

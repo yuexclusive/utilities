@@ -1,113 +1,85 @@
 #![cfg(feature = "response")]
 use crate::response;
-use std::error;
-use std::fmt::Display;
+use thiserror::Error;
 
 // pub type BasicResult<T, E = Box<dyn Error>> = Result<T, E>;
 pub type BasicResult<T, E = ErrorKind> = Result<T, E>;
 
-#[derive(Debug)]
+pub enum ErrCode {
+    Business = 500000,
+    Validate = 400000,
+    Unauthorized = 401000,
+    // Hint = 452000,
+    Timeout = 408000,
+    Other = 600000,
+}
+
+#[derive(Debug, Error)]
 pub enum ErrorKind {
-    BusinessError(String),
-    ValidationError(String),
-    Unauthorized(String),
-    Timeout(String),
+    #[error("[ err_code: {} ] business error: {}",.err_code,.msg)]
+    Business { msg: String, err_code: usize },
+
+    #[error("[ err_code: {} ] validate error: {}",.err_code,.msg)]
+    Validate { msg: String, err_code: usize },
+
+    #[error("[ err_code: {} ] unauthorized: {}",.err_code,.msg)]
+    Unauthorized { msg: String, err_code: usize },
+
+    #[error("hint: {}",.0)]
     Hint(String),
-    OtherError(Box<dyn error::Error>),
+
+    #[error("timeout")]
+    Timeout,
+
+    #[cfg(feature = "pg")]
+    #[error(transparent)]
+    Sqlx(#[from] sqlx::Error),
+
+    #[cfg(feature = "redis")]
+    #[error(transparent)]
+    Redis(#[from] redis::RedisError),
+
+    // #[error(transparent)]
+    // Bincode(#[from] bincode::Error),
+    #[cfg(feature = "actix-web")]
+    #[error(transparent)]
+    JWT(#[from] jsonwebtoken::errors::Error),
+
+    // #[cfg(feature = "actix-web")]
+    // #[error(transparent)]
+    // SendError(#[from] tokio::sync::mpsc::error::SendError),
+    #[error(transparent)]
+    SystemTimeError(#[from] std::time::SystemTimeError),
+
+    #[cfg(feature = "regex")]
+    #[error(transparent)]
+    Regex(#[from] regex::Error),
+
+    #[cfg(feature = "meilisearch")]
+    #[error(transparent)]
+    Meilisearch(#[from] meilisearch_sdk::errors::Error),
+
+    #[cfg(feature = "email")]
+    #[error(transparent)]
+    Lettre(#[from] lettre::transport::smtp::Error),
 }
 
-impl Display for ErrorKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ErrorKind::BusinessError(msg) => f.write_str(msg),
-            ErrorKind::ValidationError(msg) => f.write_str(msg),
-            ErrorKind::Unauthorized(msg) => f.write_str(msg),
-            ErrorKind::Timeout(msg) => f.write_str(msg),
-            ErrorKind::Hint(msg) => f.write_str(msg),
-            ErrorKind::OtherError(err) => f.write_fmt(format_args!("other error: {}", err)),
-        }
-    }
-}
-
-impl std::error::Error for ErrorKind {}
-
-#[cfg(feature = "pg")]
-impl From<sqlx::Error> for ErrorKind {
-    fn from(err: sqlx::Error) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-#[cfg(feature = "redis")]
-impl From<redis::RedisError> for ErrorKind {
-    fn from(err: redis::RedisError) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-// impl From<bincode::Error> for ErrorKind {
-//     fn from(err: bincode::Error) -> Self {
+// #[cfg(feature = "actix-web")]
+// impl<T> From<tokio::sync::mpsc::error::SendError<T>> for ErrorKind
+// where
+//     T: std::fmt::Debug + 'static,
+// {
+//     fn from(err: tokio::sync::mpsc::error::SendError<T>) -> Self {
 //         ErrorKind::OtherError(Box::new(err))
 //     }
 // }
 
-#[cfg(feature = "actix-web")]
-impl From<jsonwebtoken::errors::Error> for ErrorKind {
-    fn from(err: jsonwebtoken::errors::Error) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-#[cfg(feature = "actix-web")]
-impl<T> From<tokio::sync::mpsc::error::SendError<T>> for ErrorKind
-where
-    T: std::fmt::Debug + 'static,
-{
-    fn from(err: tokio::sync::mpsc::error::SendError<T>) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-#[cfg(feature = "actix-web")]
-impl From<tokio::sync::oneshot::error::RecvError> for ErrorKind
-{
-    fn from(err: tokio::sync::oneshot::error::RecvError) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-impl From<std::time::SystemTimeError> for ErrorKind {
-    fn from(err: std::time::SystemTimeError) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-#[cfg(feature = "regex")]
-impl From<regex::Error> for ErrorKind {
-    fn from(err: regex::Error) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-#[cfg(feature = "meilisearch")]
-impl From<meilisearch_sdk::errors::Error> for ErrorKind {
-    fn from(err: meilisearch_sdk::errors::Error) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-#[cfg(feature = "email")]
-impl From<lettre::transport::smtp::Error> for ErrorKind {
-    fn from(err: lettre::transport::smtp::Error) -> Self {
-        ErrorKind::OtherError(Box::new(err))
-    }
-}
-
-impl<T> From<ErrorKind> for Result<T, ErrorKind> {
-    fn from(value: ErrorKind) -> Self {
-        Err(value)
-    }
-}
+// #[cfg(feature = "actix-web")]
+// impl From<tokio::sync::oneshot::error::RecvError> for ErrorKind {
+//     fn from(err: tokio::sync::oneshot::error::RecvError) -> Self {
+//         ErrorKind::OtherError(Box::new(err))
+//     }
+// }
 
 #[cfg(feature = "actix-web")]
 use actix_web::{http::header::ContentType, HttpResponse};
@@ -115,12 +87,21 @@ use actix_web::{http::header::ContentType, HttpResponse};
 impl actix_web::error::ResponseError for ErrorKind {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
-            ErrorKind::BusinessError(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorKind::ValidationError(_) => actix_web::http::StatusCode::BAD_REQUEST,
-            ErrorKind::Unauthorized(_) => actix_web::http::StatusCode::UNAUTHORIZED,
-            ErrorKind::Timeout(_) => actix_web::http::StatusCode::REQUEST_TIMEOUT,
+            ErrorKind::Business {
+                msg: _,
+                err_code: _,
+            } => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            ErrorKind::Validate {
+                msg: _,
+                err_code: _,
+            } => actix_web::http::StatusCode::BAD_REQUEST,
+            ErrorKind::Unauthorized {
+                msg: _,
+                err_code: _,
+            } => actix_web::http::StatusCode::UNAUTHORIZED,
+            ErrorKind::Timeout => actix_web::http::StatusCode::REQUEST_TIMEOUT,
             ErrorKind::Hint(_) => actix_web::http::StatusCode::from_u16(452).unwrap(),
-            ErrorKind::OtherError(_) => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            _ => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -134,38 +115,80 @@ impl actix_web::error::ResponseError for ErrorKind {
                 "PATCH, POST, CONNECT, GET, TRACE, PUT, OPTIONS, DELETE, HEAD",
             ))
             .insert_header(("access-control-max-age", "3600"))
-            .body(serde_json::to_string(&response::MsgResponse::new(&format!("{}", self))).unwrap())
+            .body(match self {
+                ErrorKind::Business { msg, err_code }
+                | ErrorKind::Validate { msg, err_code }
+                | ErrorKind::Unauthorized { msg, err_code } => serde_json::to_string(
+                    &response::ErrorResponse::new(&format!("{}", msg), Some(*err_code)),
+                )
+                .unwrap(),
+                ErrorKind::Hint(msg) => {
+                    serde_json::to_string(&response::MsgResponse::new(msg)).unwrap()
+                }
+                _ => serde_json::to_string(&response::MsgResponse::new(&self.to_string())).unwrap(),
+            })
+    }
+}
+
+impl<T> From<ErrorKind> for Result<T, ErrorKind> {
+    fn from(value: ErrorKind) -> Self {
+        Err(value)
     }
 }
 
 #[macro_export]
 macro_rules! business_error {
-    ($error_msg: expr) => {{
-        log::error!("business error: {}", $error_msg);
-        utilities::error::ErrorKind::BusinessError($error_msg.to_string())
+    ($msg: expr) => {{
+        business_error!($msg, utilities::error::ErrCode::Business as usize)
+    }};
+
+    ($msg: expr, $err_code: expr) => {{
+        let res = utilities::error::ErrorKind::Business {
+            msg: $msg.to_string(),
+            err_code: $err_code,
+        };
+        log::error!("{}", res);
+        res
     }};
 }
 
 #[macro_export]
-macro_rules! validation_error {
-    ($error_msg: expr) => {{
-        log::error!("validation error: {}", $error_msg);
-        utilities::error::ErrorKind::ValidationError($error_msg.to_string())
+macro_rules! validate_error {
+    ($msg: expr) => {{
+        validate_error!($msg, utilities::error::ErrCode::Validate as usize)
+    }};
+
+    ($msg: expr, $err_code: expr) => {{
+        let res = utilities::error::ErrorKind::Validate {
+            msg: $msg.to_string(),
+            err_code: $err_code,
+        };
+        log::error!("{}", res);
+        res
     }};
 }
 
 #[macro_export]
-macro_rules! hint_error {
-    ($error_msg: expr) => {{
-        log::error!("hint error: {}", $error_msg);
-        utilities::error::ErrorKind::Hint($error_msg.to_string())
+macro_rules! hint {
+    ($msg: expr) => {{
+        let res = utilities::error::ErrorKind::Hint($msg.to_string());
+        log::warn!("{}", res);
+        res
     }};
 }
 
 #[macro_export]
-macro_rules! unauthorized_error {
-    ($error_msg: expr) => {{
-        log::error!("unauthorized error: {}", $error_msg);
-        utilities::error::ErrorKind::Unauthorized($error_msg.to_string())
+macro_rules! unauthorized {
+    ($msg: expr) => {{
+        unauthorized!($msg, utilities::error::ErrCode::Unauthorized as usize)
+    }};
+
+    ($msg: expr, $err_code: expr) => {{
+        let res = utilities::error::ErrorKind::Unauthorized {
+            msg: $msg.to_string(),
+            err_code: $err_code,
+        };
+        log::error!("{}", res);
+        res
     }};
 }
