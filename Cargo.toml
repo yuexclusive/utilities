@@ -35,9 +35,9 @@ utoipa-swagger-ui = {version = "2", features = ["actix-web"], optional = true}
 
 [features]
 actix-web = ["dep:actix-web", "json", "response", "jsonwebtoken", "dep:tokio"]
-all = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response", "openapi"]
+full = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response", "openapi"]
 datetime = ["dep:chrono"]
-# default = ["all"]
+# default = ["full"]
 email = ["dep:lettre"]
 from_primitive = ["dep:num", "dep:num-derive"]
 json = ["dep:serde", "dep:serde_json"]
