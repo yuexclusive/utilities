@@ -64,23 +64,6 @@ pub enum ErrorKind {
     Lettre(#[from] lettre::transport::smtp::Error),
 }
 
-// #[cfg(feature = "actix-web")]
-// impl<T> From<tokio::sync::mpsc::error::SendError<T>> for ErrorKind
-// where
-//     T: std::fmt::Debug + 'static,
-// {
-//     fn from(err: tokio::sync::mpsc::error::SendError<T>) -> Self {
-//         ErrorKind::OtherError(Box::new(err))
-//     }
-// }
-
-// #[cfg(feature = "actix-web")]
-// impl From<tokio::sync::oneshot::error::RecvError> for ErrorKind {
-//     fn from(err: tokio::sync::oneshot::error::RecvError) -> Self {
-//         ErrorKind::OtherError(Box::new(err))
-//     }
-// }
-
 #[cfg(feature = "actix-web")]
 use actix_web::{http::header::ContentType, HttpResponse};
 #[cfg(feature = "actix-web")]
