@@ -29,18 +29,18 @@ num-derive = {version = "0", optional = true}
 redis = {version = "0", features = ["tokio-comp"], optional = true}
 redis_encoding_derive = {path = "./redis_encoding_derive"}
 regex = {version = "1", optional = true}
+thiserror = "1.0"
 tokio = {version = "1", features = ["rt-multi-thread", "macros", "time"], optional = true}
 utoipa = {version = "2", features = ["actix_extras"], optional = true}
 utoipa-swagger-ui = {version = "2", features = ["actix-web"], optional = true}
-thiserror = "1.0"
 
 [features]
 actix-web = ["dep:actix-web", "json", "response", "jsonwebtoken", "dep:tokio"]
-from_primitive = ["dep:num", "dep:num-derive"]
-full = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response", "openapi"]
 datetime = ["dep:chrono"]
 # default = ["full"]
 email = ["dep:lettre"]
+from_primitive = ["dep:num", "dep:num-derive"]
+full = ["actix-web", "datetime", "email", "from_primitive", "json", "meilisearch", "pg", "redis", "regex", "response", "openapi"]
 json = ["dep:serde", "dep:serde_json"]
 meilisearch = ["dep:meilisearch-sdk", "dep:lazy_static"]
 openapi = ["dep:utoipa", "dep:utoipa-swagger-ui"]
@@ -48,4 +48,3 @@ pg = ["dep:sqlx", "dep:lazy_static"]
 redis = ["dep:redis", "dep:lazy_static", "futures", "json", "actix-web"]
 regex = ["dep:regex"]
 response = ["dep:serde", "actix-web"]
-

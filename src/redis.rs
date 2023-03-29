@@ -5,7 +5,7 @@ use redis::{aio::Connection, AsyncCommands, Commands, FromRedisValue, ToRedisArg
 use serde::ser::Serialize;
 use std::sync::Mutex;
 pub mod derive {
-    pub use redis_encoding_derive::{FromRedisValue, ToRedisArgs};
+    pub use redis_encoding_derive::{from_redis, to_redis};
 }
 
 lazy_static! {
