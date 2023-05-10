@@ -1,9 +1,8 @@
 #![cfg(feature = "meilisearch")]
 
-use lazy_static::lazy_static;
 use meilisearch_sdk::client::Client;
 pub use meilisearch_sdk::settings::Settings;
-use std::sync::Mutex;
+use once_cell::sync::OnceCell;
 
 #[derive(Clone)]
 struct Config {
@@ -11,26 +10,30 @@ struct Config {
     api_key: String,
 }
 
-lazy_static! {
-    static ref CONFIG: Mutex<Option<Config>> = Default::default();
-}
+static mut CONFIG: OnceCell<Config> = OnceCell::new();
+static CLIENT: OnceCell<Client> = OnceCell::new();
 
-lazy_static! {
-    pub static ref CONN: Client = {
-        let cfg = CONFIG
-            .lock()
-            .unwrap()
-            .clone()
-            .expect("please init config first");
-        Client::new(cfg.address, cfg.api_key)
+pub async fn init(address: &str, api_key: &str) {
+    unsafe {
+        CONFIG.get_or_init(|| Config {
+            address: address.to_string(),
+            api_key: api_key.to_string(),
+        })
     };
+
+    match client().get_stats().await {
+        Ok(_status) => {
+            log::info!("✅meilisearch init success")
+        }
+        Err(e) => {
+            panic!("get_stats failed, error: {e}")
+        }
+    }
 }
 
-pub fn init(address: &str, api_key: &str) {
-    *CONFIG.lock().unwrap() = Some(Config {
-        address: address.to_string(),
-        api_key: api_key.to_string(),
-    });
-
-    log::info!("meilisearch init success")
+pub fn client() -> &'static Client {
+    CLIENT.get_or_init(|| {
+        let cfg = unsafe { CONFIG.get_unchecked() };
+        Client::new(cfg.address.clone(), cfg.api_key.clone())
+    })
 }

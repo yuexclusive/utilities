@@ -1,20 +1,19 @@
 #![cfg(feature = "redis")]
-use lazy_static::lazy_static;
+use once_cell::sync::OnceCell;
 pub use redis;
-use redis::{aio::Connection, AsyncCommands, Commands, FromRedisValue, ToRedisArgs};
+use redis::{
+    aio::{Connection, ConnectionLike, PubSub},
+    AsyncCommands, Client, ConnectionAddr, ConnectionInfo, FromRedisValue, IntoConnectionInfo,
+    RedisConnectionInfo, RedisError, RedisResult, ToRedisArgs,
+};
 use serde::ser::Serialize;
-use std::sync::Mutex;
 pub mod derive {
     pub use redis_encoding_derive::{from_redis, to_redis};
 }
 
-lazy_static! {
-    static ref CONFIG: Mutex<Option<Config>> = Default::default();
-}
+static CLIENT: OnceCell<Client> = OnceCell::new();
 
-fn get_config() -> Config {
-    CONFIG.lock().unwrap().clone().expect("please init redis")
-}
+static mut CONFIG: OnceCell<Config> = OnceCell::new();
 
 #[derive(Clone, Default)]
 struct Config {
@@ -24,11 +23,11 @@ struct Config {
     pub password: Option<String>,
 }
 
-impl redis::IntoConnectionInfo for Config {
-    fn into_connection_info(self) -> redis::RedisResult<redis::ConnectionInfo> {
-        Ok(redis::ConnectionInfo {
-            addr: redis::ConnectionAddr::Tcp(self.host, self.port),
-            redis: redis::RedisConnectionInfo {
+impl IntoConnectionInfo for Config {
+    fn into_connection_info(self) -> RedisResult<ConnectionInfo> {
+        Ok(ConnectionInfo {
+            addr: ConnectionAddr::Tcp(self.host, self.port),
+            redis: RedisConnectionInfo {
                 username: self.username,
                 password: self.password,
                 ..Default::default()
@@ -37,25 +36,46 @@ impl redis::IntoConnectionInfo for Config {
     }
 }
 
-pub fn init(host: impl AsRef<str>, port: u16, username: Option<String>, password: Option<String>) {
-    *CONFIG.lock().unwrap() = Some(Config {
-        host: host.as_ref().to_owned(),
-        port: port,
-        username: username,
-        password: password,
-    });
+pub async fn init(
+    host: impl AsRef<str>,
+    port: u16,
+    username: Option<String>,
+    password: Option<String>,
+) {
+    unsafe {
+        CONFIG.get_or_init(|| Config {
+            host: host.as_ref().to_owned(),
+            port,
+            username,
+            password,
+        });
+    }
 
-    log::info!("redis init success")
+    match ping().await {
+        Ok(redis::Value::Status(ref v)) => {
+            if v == "PONG" {
+                log::info!("✅redis init success");
+            } else {
+                panic!("redis init failed, status: {}", v);
+            }
+        }
+        Err(e) => {
+            panic!("redis init failed, error: {}", e)
+        }
+        other => {
+            panic!("redis init failed, other: {:?}", other)
+        }
+    }
 }
 
 pub async fn conn() -> redis::RedisResult<Connection> {
-    let client = redis::Client::open(get_config())?;
+    let cfg = unsafe { CONFIG.get_unchecked() };
+    let client = CLIENT.get_or_init(|| redis::Client::open(cfg.clone()).unwrap());
     client.get_async_connection().await
 }
 
-async fn pubsub() -> redis::RedisResult<redis::aio::PubSub> {
-    let client = redis::Client::open(get_config())?;
-    let res = client.get_async_connection().await?.into_pubsub();
+async fn pubsub() -> redis::RedisResult<PubSub> {
+    let res = conn().await?.into_pubsub();
     Ok(res)
 }
 
@@ -107,7 +127,7 @@ where
     conn().await?.set_ex(k, v, seconds).await
 }
 
-pub async fn get<'a, K, V>(k: K) -> Result<V, redis::RedisError>
+pub async fn get<'a, K, V>(k: K) -> Result<V, RedisError>
 where
     K: redis::ToRedisArgs + Send + Sync + 'a,
     V: FromRedisValue,
@@ -115,101 +135,20 @@ where
     conn().await?.get::<_, V>(k).await
 }
 
-pub async fn ttl<'a, K>(k: K) -> Result<u32, redis::RedisError>
+pub async fn ttl<'a, K>(k: K) -> Result<u32, RedisError>
 where
     K: redis::ToRedisArgs + Send + Sync + 'a,
 {
     conn().await?.ttl::<_, u32>(k).await
 }
 
-pub async fn exists<'a, K>(k: K) -> Result<bool, redis::RedisError>
+pub async fn exists<'a, K>(k: K) -> Result<bool, RedisError>
 where
     K: redis::ToRedisArgs + Send + Sync + 'a,
 {
     conn().await?.exists::<_, bool>(k).await
 }
 
-pub mod sync {
-    use super::*;
-    pub fn conn_sync() -> redis::RedisResult<redis::Connection> {
-        let client = redis::Client::open(get_config())?;
-        client.get_connection()
-    }
-
-    pub fn publish<'a, K, V>(channel: K, v: V) -> redis::RedisResult<()>
-    where
-        K: ToRedisArgs + Send + Sync + 'a,
-        V: Serialize + ToRedisArgs + Send + Sync + 'a,
-    {
-        conn_sync()?.publish(channel, v)
-    }
-
-    pub fn set<'a, K, V>(k: K, v: V) -> redis::RedisResult<()>
-    where
-        K: ToRedisArgs + Send + Sync + 'a,
-        V: Serialize + ToRedisArgs + Send + Sync + 'a,
-    {
-        conn_sync()?.set(k, v)
-    }
-
-    pub fn get<'a, K, V>(k: K) -> Result<V, redis::RedisError>
-    where
-        K: redis::ToRedisArgs + Send + Sync + 'a,
-        V: FromRedisValue,
-    {
-        conn_sync()?.get::<_, V>(k)
-    }
-
-    pub fn del<'a, K>(k: K) -> redis::RedisResult<()>
-    where
-        K: ToRedisArgs + Send + Sync + 'a,
-    {
-        conn_sync()?.del(k)
-    }
-
-    pub fn set_ex<'a, K, V>(k: K, v: V, seconds: usize) -> redis::RedisResult<()>
-    where
-        K: ToRedisArgs + Send + Sync + 'a,
-        V: Serialize + ToRedisArgs + Send + Sync + 'a,
-    {
-        conn_sync()?.set_ex(k, v, seconds)
-    }
-
-    pub fn ttl<'a, K>(k: K) -> Result<u32, redis::RedisError>
-    where
-        K: redis::ToRedisArgs + Send + Sync + 'a,
-    {
-        conn_sync()?.ttl::<_, u32>(k)
-    }
-
-    pub fn exists<'a, K>(k: K) -> Result<bool, redis::RedisError>
-    where
-        K: redis::ToRedisArgs + Send + Sync + 'a,
-    {
-        conn_sync()?.exists::<_, bool>(k)
-    }
-
-    pub fn subscribe(channel_name: &str) -> redis::RedisResult<redis::Msg> {
-        let mut conn = conn_sync()?;
-        let mut pubsub = conn.as_pubsub();
-        pubsub.subscribe(channel_name)?;
-        let stream = pubsub.get_message()?;
-        Ok(stream)
-    }
-
-    pub fn lock<'a, K, F>(k: K, mut f: F) -> redis::RedisResult<()>
-    where
-        K: ToRedisArgs + Send + Sync + Clone + 'a,
-        F: FnMut(),
-    {
-        if conn_sync()?.set_nx::<K, bool, ()>(k.clone(), true).is_ok() {
-            conn_sync()?.expire(k.clone(), 10)?;
-            f();
-            conn_sync()?.del(k.clone())?;
-        } else {
-            std::thread::sleep(std::time::Duration::from_millis(100));
-            lock(k.clone(), f)?;
-        }
-        Ok(())
-    }
+pub async fn ping() -> redis::RedisResult<redis::Value> {
+    conn().await?.req_packed_command(&redis::cmd("ping")).await
 }
