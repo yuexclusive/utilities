@@ -23,7 +23,7 @@ pub async fn init(address: &str, api_key: &str) {
 
     match client().get_stats().await {
         Ok(_status) => {
-            log::info!("✅meilisearch init success")
+            log::info!("meilisearch init success")
         }
         Err(e) => {
             panic!("get_stats failed, error: {e}")

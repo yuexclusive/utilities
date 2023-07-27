@@ -31,7 +31,7 @@ pub enum ErrorKind {
     #[error("timeout")]
     Timeout,
 
-    #[cfg(feature = "pg")]
+    #[cfg(feature = "postgres")]
     #[error(transparent)]
     Sqlx(#[from] sqlx::Error),
 

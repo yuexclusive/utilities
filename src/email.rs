@@ -28,7 +28,7 @@ pub async fn init(from: &str, pwd: &str, relay: &str, port: u16) {
     match mailer().test_connection().await {
         Ok(v) => {
             if v {
-                log::info!("✅email init success");
+                log::info!("email init success");
             } else {
                 panic!("mail init failed, the connection not connected");
             }
