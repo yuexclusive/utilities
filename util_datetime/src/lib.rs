@@ -1,5 +1,3 @@
-#![cfg(feature = "datetime")]
-
 use chrono::{DateTime, FixedOffset, Local, NaiveDateTime, Utc};
 
 pub trait FormatDateTime {

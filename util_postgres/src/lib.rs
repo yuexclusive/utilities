@@ -1,4 +1,3 @@
-#![cfg(feature = "postgres")]
 use async_once::AsyncOnce;
 use once_cell::sync::OnceCell;
 use sqlx::{Pool, Postgres, Transaction};

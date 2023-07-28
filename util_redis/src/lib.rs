@@ -1,4 +1,3 @@
-#![cfg(feature = "redis")]
 
 use once_cell::sync::OnceCell;
 pub use redis;

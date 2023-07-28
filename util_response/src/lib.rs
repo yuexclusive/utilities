@@ -1,4 +1,3 @@
-#![cfg(feature = "response")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "openapi")]
 use utoipa::{IntoParams, ToSchema};
@@ -79,6 +78,7 @@ impl Pagination {
         self.size.max(0)
     }
 }
+
 
 pub mod prelude {
     pub use super::{DataResponse, ErrorResponse, MsgResponse, Pagination};

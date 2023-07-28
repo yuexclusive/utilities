@@ -1,5 +1,3 @@
-#![cfg(feature = "email")]
-
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
 use once_cell::sync::OnceCell;
