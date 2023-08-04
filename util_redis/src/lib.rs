@@ -89,7 +89,7 @@ where
     let mut pubsub = pubsub().await?;
     pubsub.subscribe(channel_name).await?;
     let mut stream = pubsub.into_on_message();
-    let (close_sender, mut close_receiver) = mpsc::channel::<()>(0);
+    let (close_sender, mut close_receiver) = mpsc::channel::<()>(1);
     let (close_done_sender, close_done_receiver) = oneshot::channel::<()>();
     tokio::spawn(async move {
         'l: loop {
