@@ -47,6 +47,9 @@ pub enum ErrorKind {
     #[error(transparent)]
     SystemTimeError(#[from] std::time::SystemTimeError),
 
+    #[error(transparent)]
+    AnyHowError(#[from] anyhow::Error),
+
     #[cfg(feature = "regex")]
     #[error(transparent)]
     Regex(#[from] regex::Error),

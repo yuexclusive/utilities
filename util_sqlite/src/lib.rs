@@ -1,20 +1,19 @@
 use async_once::AsyncOnce;
 use once_cell::sync::OnceCell;
-use sqlx::{Pool, Postgres, Transaction};
+use sqlx::{Pool, Sqlite, Transaction};
 use std::result::Result;
 pub type SqlResult<T, E = sqlx::Error> = Result<T, E>;
-// pub type Executor = Pool<Postgres>;
-static mut POOL: OnceCell<AsyncOnce<Pool<Postgres>>> = OnceCell::new();
+static mut POOL: OnceCell<AsyncOnce<Pool<Sqlite>>> = OnceCell::new();
 
-pub async fn tran<'a>() -> SqlResult<Transaction<'a, Postgres>> {
+pub async fn tran<'a>() -> SqlResult<Transaction<'a, Sqlite>> {
     conn().await.begin().await
 }
 
-pub async fn conn() -> &'static Pool<Postgres> {
+pub async fn conn() -> &'static Pool<Sqlite> {
     unsafe {
-        POOL.get_or_init(|| -> AsyncOnce<Pool<Postgres>> {
+        POOL.get_or_init(|| -> AsyncOnce<Pool<Sqlite>> {
             AsyncOnce::new(async {
-                sqlx::postgres::PgPoolOptions::new()
+                sqlx::sqlite::SqlitePoolOptions::new()
                     .test_before_acquire(false)
                     .connect(&std::env::var("DATABASE_URL").unwrap())
                     .await
@@ -28,5 +27,5 @@ pub async fn conn() -> &'static Pool<Postgres> {
 // If something wrong, it will be show at compile time
 pub fn init() {
     dotenv::dotenv().unwrap();
-    log::info!("postgres init success");
+    log::info!("sqlite init success");
 }
