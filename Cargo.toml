@@ -1,5 +1,4 @@
 [workspace]
-resolver = "2"
 members = [
   "util_datetime",
   "util_email",
@@ -11,4 +10,6 @@ members = [
   "util_redis",
   "util_sqlite",
   "util_fluvio",
+  "redis_encoding_derive",
 ]
+resolver = "2"
