@@ -1,4 +1,3 @@
-
 use once_cell::sync::OnceCell;
 pub use redis;
 use redis::{
@@ -7,6 +6,10 @@ use redis::{
     RedisConnectionInfo, RedisResult, ToRedisArgs,
 };
 use serde::ser::Serialize;
+use tokio::sync::mpsc::{self, Sender};
+use tokio::sync::oneshot::{self, Receiver};
+use tokio_stream::StreamExt;
+use util_error::BasicResult;
 pub mod derive {
     pub use redis_encoding_derive::{from_redis, to_redis};
 }
@@ -79,11 +82,29 @@ async fn pubsub() -> RedisResult<PubSub> {
     Ok(res)
 }
 
-pub async fn subscribe(channel_name: &str) -> RedisResult<impl futures::Stream<Item = redis::Msg>> {
+pub async fn subscribe<F>(channel_name: &str, mut f: F) -> BasicResult<(Sender<()>, Receiver<()>)>
+where
+    F: FnMut(redis::Msg) + Send + 'static,
+{
     let mut pubsub = pubsub().await?;
     pubsub.subscribe(channel_name).await?;
-    let stream = pubsub.into_on_message();
-    Ok(stream)
+    let mut stream = pubsub.into_on_message();
+    let (close_sender, mut close_receiver) = mpsc::channel::<()>(0);
+    let (close_done_sender, close_done_receiver) = oneshot::channel::<()>();
+    tokio::spawn(async move {
+        'l: loop {
+            tokio::select! {
+                Some(v) = stream.next() => {
+                    f(v)
+                }
+                Some(_) = close_receiver.recv() => {
+                    break 'l
+                }
+            }
+        }
+        close_done_sender.send(()).unwrap();
+    });
+    Ok((close_sender, close_done_receiver))
 }
 
 pub async fn set<'a, K, V>(k: K, v: V) -> RedisResult<()>
