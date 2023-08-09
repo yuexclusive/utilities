@@ -5,7 +5,7 @@ pub trait FormatDateTime {
     fn to_default(&self) -> String;
 }
 
-const FORMAT_DEFAULT: &str = "%Y-%m-%d %H:%M";
+const FORMAT_DEFAULT: &str = "%Y-%m-%d %H:%M:%S";
 const FORMAT_RFC3339: &str = "%Y-%m-%dT%H:%M:%S%.6f%:z";
 
 pub trait ToDateTime {
