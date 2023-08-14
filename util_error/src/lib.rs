@@ -52,7 +52,7 @@ pub enum ErrorKind {
 
     #[cfg(feature = "regex")]
     #[error(transparent)]
-    Regex(#[from] regex::Error),
+    Regex(#[from] fancy_regex::Error),
 
     #[cfg(feature = "meilisearch")]
     #[error(transparent)]
