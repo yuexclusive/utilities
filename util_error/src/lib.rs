@@ -48,7 +48,10 @@ pub enum ErrorKind {
     SystemTimeError(#[from] std::time::SystemTimeError),
 
     #[error(transparent)]
-    AnyHowError(#[from] anyhow::Error),
+    IO(#[from] std::io::Error),
+
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
 
     #[cfg(feature = "regex")]
     #[error(transparent)]
@@ -60,7 +63,11 @@ pub enum ErrorKind {
 
     #[cfg(feature = "email")]
     #[error(transparent)]
-    Lettre(#[from] lettre::transport::smtp::Error),
+    SMTP(#[from] lettre::transport::smtp::Error),
+
+    #[cfg(feature = "email")]
+    #[error(transparent)]
+    Lettre(#[from] lettre::error::Error),
 }
 
 #[cfg(feature = "actix-web")]
