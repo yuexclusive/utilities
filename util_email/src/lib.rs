@@ -59,7 +59,7 @@ pub async fn send(to: &str, subject: &str, body: &str) -> Result<Response, Error
     let email = Message::builder()
         .from(format!("evolve.publisher <{}>", from).parse().unwrap())
         // .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
-        .to(format!("{} <{}>", to, to).parse().unwrap())
+        .to(format!("reciver <{}>", to).parse().unwrap())
         .subject(subject)
         .body(String::from(body))
         .unwrap();
