@@ -1,9 +1,12 @@
 use lettre::transport::smtp::authentication::Credentials;
-use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
+use lettre::{
+    transport::smtp::{response::Response, Error},
+    Message, SmtpTransport, Transport,
+};
 use once_cell::sync::OnceCell;
 
 static mut CONFIG: OnceCell<Config> = OnceCell::new();
-static MAILER: OnceCell<AsyncSmtpTransport<Tokio1Executor>> = OnceCell::new();
+static MAILER: OnceCell<SmtpTransport> = OnceCell::new();
 
 #[derive(Clone)]
 struct Config {
@@ -23,7 +26,7 @@ pub async fn init(from: &str, pwd: &str, relay: &str, port: u16) {
         });
     }
 
-    match mailer().test_connection().await {
+    match mailer().test_connection() {
         Ok(v) => {
             if v {
                 log::info!("email init success");
@@ -37,29 +40,21 @@ pub async fn init(from: &str, pwd: &str, relay: &str, port: u16) {
     }
 }
 
-pub fn mailer() -> &'static AsyncSmtpTransport<Tokio1Executor> {
+pub fn mailer() -> &'static SmtpTransport {
     MAILER.get_or_init(|| {
         let cfg = unsafe { CONFIG.get_unchecked() };
         let creds = Credentials::new(cfg.from.clone(), cfg.pwd.clone());
-        let mailer: AsyncSmtpTransport<Tokio1Executor> =
-            AsyncSmtpTransport::<Tokio1Executor>::relay(&cfg.relay)
-                .unwrap()
-                .port(cfg.port)
-                .credentials(creds)
-                .build();
+        let res = SmtpTransport::relay(&cfg.relay)
+            .unwrap()
+            .port(cfg.port)
+            .credentials(creds)
+            .build();
 
-        mailer
+        res
     })
 }
 
-pub async fn send(
-    to: &str,
-    subject: &str,
-    body: &str,
-) -> Result<
-    <AsyncSmtpTransport<Tokio1Executor> as AsyncTransport>::Ok,
-    <AsyncSmtpTransport<Tokio1Executor> as AsyncTransport>::Error,
-> {
+pub async fn send(to: &str, subject: &str, body: &str) -> Result<Response, Error> {
     let from = &unsafe { CONFIG.get_unchecked() }.from;
     let email = Message::builder()
         .from(format!("evolve.publisher <{}>", from).parse().unwrap())
@@ -69,5 +64,5 @@ pub async fn send(
         .body(String::from(body))
         .unwrap();
 
-    mailer().send(email).await
+    mailer().send(&email)
 }
