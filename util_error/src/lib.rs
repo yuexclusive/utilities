@@ -53,6 +53,10 @@ pub enum ErrorKind {
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
 
+    #[cfg(feature = "chrono")]
+    #[error(transparent)]
+    ChronoParseError(#[from] chrono::ParseError),
+
     #[cfg(feature = "regex")]
     #[error(transparent)]
     Regex(#[from] fancy_regex::Error),

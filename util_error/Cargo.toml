@@ -8,6 +8,7 @@ version = "0.1.0"
 [dependencies]
 actix-web = {version = "4", optional = true}
 anyhow = "1"
+chrono = {version = "0.4.26", optional = true}
 fancy-regex = {version = "0", optional = true}
 futures = {version = "0", optional = true}
 jsonwebtoken = {version = "8", optional = true}
@@ -19,11 +20,12 @@ serde = {version = "1", features = ["derive"], optional = true}
 serde_json = {version = "1", optional = true}
 sqlx = {version = "0", features = ["runtime-tokio-native-tls"], optional = true}
 thiserror = "1"
-util_response = {git = "https://github.com/yuexclusive/utilities.git"}
+util_response = {path = "../util_response"}
 
 [features]
 actix-web = ["dep:actix-web", "json", "dep:jsonwebtoken"]
 # default = ["full"]
+chrono = ["dep:chrono"]
 email = ["dep:lettre", "dep:once_cell"]
 full = ["actix-web", "redis", "postgres", "regex", "meilisearch", "email"]
 json = ["dep:serde", "dep:serde_json"]
