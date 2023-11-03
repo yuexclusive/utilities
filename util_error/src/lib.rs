@@ -63,7 +63,7 @@ pub enum ErrorKind {
 
     #[cfg(feature = "email")]
     #[error(transparent)]
-    Lettre(#[from] lettre::transport::smtp::error::Error),
+    Lettre(#[from] lettre::transport::smtp::Error),
 }
 
 #[cfg(feature = "actix-web")]
