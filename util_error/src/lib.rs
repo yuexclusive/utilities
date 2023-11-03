@@ -48,10 +48,10 @@ pub enum ErrorKind {
     SystemTimeError(#[from] std::time::SystemTimeError),
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
 
     #[error(transparent)]
-    AnyHowError(#[from] anyhow::Error),
+    Anyhow(#[from] anyhow::Error),
 
     #[cfg(feature = "regex")]
     #[error(transparent)]
