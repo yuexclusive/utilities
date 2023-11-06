@@ -56,10 +56,11 @@ pub fn mailer() -> &'static SmtpTransport {
 
 pub async fn send(to: &str, subject: &str, body: &str) -> Result<Response, Error> {
     let from = &unsafe { CONFIG.get_unchecked() }.from;
+    let to_name = to.split("@").next().unwrap_or("reciver");
     let email = Message::builder()
         .from(format!("evolve.publisher <{}>", from).parse().unwrap())
         // .reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
-        .to(format!("reciver <{}>", to).parse().unwrap())
+        .to(format!("{} <{}>", to_name, to).parse().unwrap())
         .subject(subject)
         .body(String::from(body))
         .unwrap();
