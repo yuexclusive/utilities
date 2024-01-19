@@ -7,9 +7,11 @@ members = [
   "util_from_primitive",
   "util_meilisearch",
   "util_postgres",
+  "util_mysql",
   "util_redis",
   "util_sqlite",
   "util_fluvio",
   "redis_encoding_derive",
+  "util_mysql",
 ]
 resolver = "2"
