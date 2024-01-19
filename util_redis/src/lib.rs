@@ -138,7 +138,7 @@ where
     conn().await?.set_nx(k, v).await
 }
 
-pub async fn set_ex<'a, K, V>(k: K, v: V, seconds: usize) -> RedisResult<()>
+pub async fn set_ex<'a, K, V>(k: K, v: V, seconds: u64) -> RedisResult<()>
 where
     K: ToRedisArgs + Send + Sync + 'a,
     V: Serialize + ToRedisArgs + Send + Sync + 'a,
