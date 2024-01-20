@@ -82,7 +82,7 @@ impl Pagination {
 
 pub mod prelude {
     pub use super::{DataResponse, ErrorResponse, MsgResponse, Pagination};
-    pub use actix_web::web::Json;
+    pub use actix_web::web::{Json,Redirect,redirect};
 
     #[macro_export]
     macro_rules! msg {
