@@ -71,10 +71,10 @@ pub mod prelude {
     #[macro_export]
     macro_rules! data {
         ($data:expr) => {{
-            (DataResponse::new(Some($data), None, None::<String>, None))
+            Response::new(Some($data), None, None::<String>, None)
         }};
         ($data:expr,$total:expr) => {{
-            DataResponse::new(Some($data), Some($total), None::<String>, None)
+            Response::new(Some($data), Some($total), None::<String>, None)
         }};
     }
 }
