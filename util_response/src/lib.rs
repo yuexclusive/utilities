@@ -1,6 +1,17 @@
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
+#[derive(ToSchema)]
+pub struct MsgResponse {
+    pub msg: String,
+}
+
+#[derive(ToSchema)]
+pub struct MsgResponseWithErrCode {
+    pub msg: String,
+    pub err_code: usize,
+}
+
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct Response<D, M>
