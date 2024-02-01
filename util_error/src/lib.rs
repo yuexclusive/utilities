@@ -72,6 +72,7 @@ pub enum ErrorKind {
 
 #[cfg(feature = "actix-web")]
 use actix_web::{http::header::ContentType, HttpResponse};
+use util_response::{msg, prelude::*};
 #[cfg(feature = "actix-web")]
 impl actix_web::error::ResponseError for ErrorKind {
     fn status_code(&self) -> actix_web::http::StatusCode {
@@ -99,12 +100,10 @@ impl actix_web::error::ResponseError for ErrorKind {
                 ErrorKind::Business { msg, err_code }
                 | ErrorKind::Validate { msg, err_code }
                 | ErrorKind::Hint { msg, err_code }
-                | ErrorKind::Unauthorized { msg, err_code } => serde_json::to_string(
-                    &util_response::ErrorResponse::new(&format!("{}", msg), Some(*err_code)),
-                )
-                .unwrap(),
-                _ => serde_json::to_string(&util_response::MsgResponse::new(&self.to_string()))
-                    .unwrap(),
+                | ErrorKind::Unauthorized { msg, err_code } => {
+                    serde_json::to_string(&msg!(msg, *err_code)).unwrap()
+                }
+                _ => serde_json::to_string(&msg!(self.to_string())).unwrap(),
             })
     }
 }

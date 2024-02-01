@@ -7,11 +7,6 @@ version = "0.1.0"
 
 [dependencies]
 actix-web = "4.3.1"
-serde = {version = "1.0.176", features = ["derive"]}
-utoipa = {version = "2", features = ["actix_extras"], optional = true}
-utoipa-swagger-ui = {version = "2", features = ["actix-web"], optional = true}
-
-[features]
-# default = ["full"]
-full = ["openapi"]
-openapi = ["dep:utoipa", "dep:utoipa-swagger-ui"]
+serde = { version = "1.0.176", features = ["derive"] }
+utoipa = { version = "2", features = ["actix_extras"] }
+utoipa-swagger-ui = { version = "2", features = ["actix-web"] }

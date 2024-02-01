@@ -1,69 +1,24 @@
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "openapi")]
 use utoipa::{IntoParams, ToSchema};
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
-#[serde(untagged)]
-pub enum Response<'a, T = ()>
+pub struct Response<D, M>
 where
-    T: Serialize,
+    D: Serialize,
+    M: AsRef<str>,
 {
-    Msg(MsgResponse<'a>),
-    Data(DataResponse<T>),
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "openapi", derive(ToSchema))]
-pub struct ErrorResponse<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    err_code: Option<usize>,
-    msg: &'a str,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "openapi", derive(ToSchema))]
-pub struct MsgResponse<'a> {
-    msg: &'a str,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "openapi", derive(ToSchema))]
-pub struct DataResponse<T>
-where
-    T: Serialize,
-{
-    data: T,
+    data: Option<D>,
     #[serde(skip_serializing_if = "Option::is_none")]
     total: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    msg: Option<M>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    err_code: Option<usize>,
 }
 
-impl<'a> MsgResponse<'a> {
-    pub fn new<'b: 'a>(msg: &'b str) -> Self {
-        Self { msg }
-    }
-}
-
-impl<'a> ErrorResponse<'a> {
-    pub fn new<'b: 'a>(msg: &'b str, err_code: Option<usize>) -> Self {
-        Self { msg, err_code }
-    }
-}
-
-impl<T> DataResponse<T>
-where
-    T: Serialize,
-{
-    pub fn new(data: T, total: Option<usize>) -> Self {
-        Self { data, total }
-    }
-}
-
-#[cfg_attr(feature = "openapi", derive(IntoParams))]
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams)]
 pub struct Pagination {
     pub index: i64,
     pub size: i64,
@@ -79,35 +34,47 @@ impl Pagination {
     }
 }
 
+impl<D, M> Response<D, M>
+where
+    D: Serialize,
+    M: AsRef<str>,
+{
+    pub fn new(
+        data: Option<D>,
+        total: Option<usize>,
+        msg: Option<M>,
+        err_code: Option<usize>,
+    ) -> Self {
+        Self {
+            data,
+            total,
+            msg,
+            err_code,
+        }
+    }
+}
 
 pub mod prelude {
-    pub use super::{DataResponse, ErrorResponse, MsgResponse, Pagination};
-    pub use actix_web::web::{Json,Redirect,redirect};
+    pub use super::{Pagination, Response};
+    pub use actix_web::web::{redirect, Json, Redirect};
 
     #[macro_export]
     macro_rules! msg {
         ($msg:expr) => {{
-            Ok(Json(MsgResponse::new($msg)))
-        }};
-    }
-
-    #[macro_export]
-    macro_rules! error {
-        ($msg:expr) => {{
-            Ok(Json(ErrorResponse::new($msg, None)))
+            Response::new(None::<()>, None, Some($msg), None)
         }};
         ($msg:expr,$err_code:expr) => {{
-            Ok(Json(ErrorResponse::new($msg, Some($err_code))))
+            Response::new(None::<()>, None, Some($msg), Some($err_code))
         }};
     }
 
     #[macro_export]
     macro_rules! data {
         ($data:expr) => {{
-            Ok(Json(DataResponse::new($data, None)))
+            (DataResponse::new(Some($data), None, None::<String>, None))
         }};
         ($data:expr,$total:expr) => {{
-            Ok(Json(DataResponse::new($data, Some($total))))
+            DataResponse::new(Some($data), Some($total), None::<String>, None)
         }};
     }
 }
