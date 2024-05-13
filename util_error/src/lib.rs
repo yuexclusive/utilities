@@ -2,12 +2,12 @@ pub use thiserror::Error;
 pub type BasicResult<T, E = ErrorKind> = Result<T, E>;
 
 pub enum ErrCode {
-    Business = 500000,
-    Validate = 400000,
-    Unauthorized = 401000,
-    Hint = 452000,
-    Timeout = 408000,
-    Other = 600000,
+    Business = 50000000,
+    Validate = 40000000,
+    Unauthorized = 40100000,
+    Hint = 45200000,
+    Timeout = 40800000,
+    Other = 60000000,
 }
 
 #[derive(Debug, Error)]
@@ -121,6 +121,9 @@ macro_rules! business_error {
     }};
 
     ($msg: expr, $err_code: expr) => {{
+        if $err_code < 50000000 || $err_code > 50099999 {
+            panic!("err_code must between 50000000 and 50099999");
+        }
         let res = util_error::ErrorKind::Business {
             msg: $msg.to_string(),
             err_code: $err_code,
@@ -137,6 +140,10 @@ macro_rules! validate_error {
     }};
 
     ($msg: expr, $err_code: expr) => {{
+        if $err_code < 40000000 || $err_code > 40099999 {
+            panic!("err_code must between 40000000 and 40099999");
+        }
+
         let res = util_error::ErrorKind::Validate {
             msg: $msg.to_string(),
             err_code: $err_code,
@@ -152,6 +159,10 @@ macro_rules! hint {
         hint!($msg, util_error::ErrCode::Hint as usize)
     }};
     ($msg: expr, $err_code: expr) => {{
+        if $err_code < 45200000 || $err_code > 45299999 {
+            panic!("err_code must between 45200000 and 45299999");
+        }
+
         let res = util_error::ErrorKind::Hint {
             msg: $msg.to_string(),
             err_code: $err_code,
@@ -168,6 +179,10 @@ macro_rules! unauthorized {
     }};
 
     ($msg: expr, $err_code: expr) => {{
+        if $err_code < 40100000 || $err_code > 40199999 {
+            panic!("err_code must between 40100000 and 40199999");
+        }
+        
         let res = util_error::ErrorKind::Unauthorized {
             msg: $msg.to_string(),
             err_code: $err_code,
